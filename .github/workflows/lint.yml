@@ -1,0 +1,62 @@
+name: Lint
+
+# Baseline correctness checks for every push (any branch) and every PR: Ruby syntax
+# (ruby -c), rubocop style, and a bash syntax check for install.sh (the one non-Ruby
+# file in this repo). Runs on macos-latest so 'ruby -c' uses the same system Ruby 2.6
+# that ships on a vanilla macOS (see .rubocop.yml TargetRubyVersion / Gemfile ruby pin
+# / README.md Requirements) -- this tool must work under that interpreter since that's
+# what most users will actually have on PATH.
+
+on:
+  push:
+    paths-ignore:
+      - '**/*.md'
+      - 'LICENSE'
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - 'LICENSE'
+
+jobs:
+  ruby:
+    name: Ruby syntax (ruby -c) and style (rubocop)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ruby -c on every .rb file and every bin/ executable (system Ruby)
+        shell: bash
+        run: |
+          set -euo pipefail
+          check_failed=0
+          while IFS= read -r -d '' file; do
+            if ! /usr/bin/ruby -c "${file}" >/dev/null; then
+              echo "::error file=${file}::ruby -c failed"
+              check_failed=1
+            fi
+          done < <(find lib spec -type f -name '*.rb' -print0)
+          for file in bin/*; do
+            if ! /usr/bin/ruby -c "${file}" >/dev/null; then
+              echo "::error file=${file}::ruby -c failed"
+              check_failed=1
+            fi
+          done
+          exit "${check_failed}"
+
+      - name: Install gems (pinned in Gemfile.lock for Ruby 2.6 compatibility)
+        shell: bash
+        run: /usr/bin/bundle install --path vendor/bundle
+
+      - name: rubocop
+        shell: bash
+        run: /usr/bin/bundle exec rubocop --no-color
+
+  shell:
+    name: install.sh syntax (bash -n)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: bash -n install.sh
+        shell: bash
+        run: bash -n install.sh

@@ -1,0 +1,14 @@
+# mise configuration for git-remote-gpg-encrypt
+#
+# This tool must run under system Ruby (2.6, as shipped on macOS) because
+# end users install it via Homebrew or the curl bootstrap (install.sh)
+# without necessarily having mise -- or any Ruby version manager -- set up
+# at all. Development/testing in this repo must exercise the same
+# interpreter real users will actually run the tool under, not whatever
+# newer Ruby mise happens to have active in this shell.
+#
+# Disabling mise's ruby tool here means 'ruby'/'gem'/'bundle' on PATH always
+# resolve to the system installation (e.g. /usr/bin/ruby) while working in
+# this repo, regardless of what other projects' .mise.toml files request.
+[settings]
+disable_tools = ["ruby"]

@@ -1,0 +1,24 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# file location: bin/git-remote-gpg-encrypt
+#
+# NOTE ON FILENAME: git mandates an exact, extensionless name of the form
+# 'git-remote-<transport>' for remote-helper dispatch (see 'man
+# gitremote-helpers' INVOCATION) -- this is the one executable in this repo
+# that cannot follow the usual '.rb'-suffixed naming.
+#
+# Git invokes this automatically for any remote URL of the form
+# 'gpg-encrypt::<url>'. See lib/git_remote_gpg_encrypt/remote_helper.rb for
+# the protocol implementation and lib/git_remote_gpg_encrypt/backup.rb for
+# the actual bundle/encrypt/chunk/push logic.
+
+require_relative '../lib/git_remote_gpg_encrypt'
+
+if __FILE__ == $PROGRAM_NAME
+  # ARGV[-1] is always the address (the underlying wrapper-repo URL) --
+  # per 'man gitremote-helpers' INVOCATION, git strips the 'gpg-encrypt::'
+  # prefix itself before invoking this helper.
+  success = GitRemoteGpgEncrypt::RemoteHelper.run(address: ARGV[-1].to_s)
+  exit(success ? 0 : 1)
+end

@@ -1,0 +1,31 @@
+name: Bundler Audit
+
+# Continuously checks Gemfile.lock against the Ruby Advisory Database for known CVEs.
+# Runs whenever Gemfile/Gemfile.lock change and on a weekly schedule to catch newly
+# disclosed CVEs against an unchanged lockfile. Backs the vulnerability badge in
+# README.md with a real, continuously-updated signal.
+
+on:
+  push:
+    paths:
+      - 'Gemfile'
+      - 'Gemfile.lock'
+  schedule:
+    # Every Monday at 09:00 UTC.
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    name: bundler-audit (Gemfile.lock)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install gems (pinned in Gemfile.lock for Ruby 2.6 compatibility)
+        shell: bash
+        run: /usr/bin/bundle install --path vendor/bundle
+
+      - name: bundler-audit (Ruby Advisory Database check)
+        shell: bash
+        run: /usr/bin/bundle exec bundler-audit check --update

@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# file location: bin/git-gpg-encrypt-verify
+#
+# Verifies the backup currently pushed to <remote-url> still decrypts with
+# the configured passphrase and passes 'git bundle verify'. Use this before
+# any operation that would destroy the wrapper repo's history (squashing,
+# force-pushing) -- confirm you have a known-good backup before risking the
+# only copy of it.
+#
+# Usage: git gpg-encrypt-verify <remote-url>
+
+require_relative '../lib/git_remote_gpg_encrypt'
+
+def usage
+  puts 'Usage: git gpg-encrypt-verify <remote-url>'
+  puts ''
+  puts 'Verifies the current backup at <remote-url> decrypts with the configured'
+  puts "passphrase and passes 'git bundle verify'."
+  puts ''
+  puts '  eg: git gpg-encrypt-verify https://github.com/USER/REPO.git'
+end
+
+if ARGV.include?('-h') || ARGV.include?('--help')
+  usage
+  exit 0
+end
+
+if ARGV.size != 1
+  usage
+  exit 1
+end
+
+success = GitRemoteGpgEncrypt::Backup.verify_decryptable?(remote_url: ARGV[0])
+exit(success ? 0 : 1)

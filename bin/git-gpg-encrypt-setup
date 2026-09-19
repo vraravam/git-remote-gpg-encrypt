@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# file location: bin/git-gpg-encrypt-setup
+#
+# Verifies the tool is ready to use: gpg installed, and a passphrase
+# configured (macOS Keychain, or the GIT_GPG_ENCRYPT_PASSPHRASE environment
+# variable). Safe to run repeatedly -- does nothing visible if already
+# configured. Named 'git-gpg-encrypt-setup' (on PATH) so it can be invoked
+# as 'git gpg-encrypt-setup', matching git's own subcommand-discovery
+# convention for any 'git-<name>' executable on PATH.
+#
+# Usage: git gpg-encrypt-setup
+
+require_relative '../lib/git_remote_gpg_encrypt'
+
+def usage
+  puts 'Usage: git gpg-encrypt-setup'
+  puts ''
+  puts 'Verifies gpg is installed and a passphrase is configured (macOS Keychain, or the'
+  puts 'GIT_GPG_ENCRYPT_PASSPHRASE environment variable). Prompts interactively for one if'
+  puts 'missing and a real terminal is available; otherwise prints the manual setup command.'
+end
+
+if ARGV.include?('-h') || ARGV.include?('--help')
+  usage
+  exit 0
+end
+
+unless GitRemoteGpgEncrypt::Core.command_exists?('gpg')
+  warn "'gpg' command not found in PATH -- install GnuPG first (e.g. 'brew install gnupg')."
+  exit 1
+end
+
+success = GitRemoteGpgEncrypt::Backup.prompt_and_store_passphrase
+exit(success ? 0 : 1)

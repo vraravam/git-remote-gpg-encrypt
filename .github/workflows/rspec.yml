@@ -1,0 +1,56 @@
+name: RSpec
+
+# Runs the test suite for every push (any branch) and every PR. Runs on macos-latest
+# using the system Ruby (/usr/bin/ruby, 2.6 -- see .rubocop.yml TargetRubyVersion /
+# Gemfile ruby pin) since that's the interpreter this tool must actually support.
+#
+# The suite exercises real 'gpg' and 'git' subprocesses (no mocking of the actual
+# cryptography or git plumbing) -- both come preinstalled on macos-latest runners.
+#
+# Also uploads the SimpleCov-generated coverage/.resultset.json (see spec/spec_helper.rb)
+# to Codecov for the coverage badge in README.md. Best-effort (fail_ci_if_error: false)
+# so a Codecov outage never blocks the actual test result.
+#
+# Requires a CODECOV_TOKEN repo secret (Settings > Secrets and variables > Actions) --
+# generate it from this repo's page on codecov.io (free for public/OSS repos; see
+# https://about.codecov.io/pricing/) after signing in with GitHub. A stored token is
+# codecov-action's standard, documented usage; the free/tokenless paths it also offers
+# (OIDC via 'use_oidc: true', or an org-level "Global Upload Token" opt-out on
+# codecov.io) are both opt-in alternatives, not the default -- a token is simplest here.
+
+on:
+  push:
+    paths-ignore:
+      - '**/*.md'
+      - 'LICENSE'
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - 'LICENSE'
+
+jobs:
+  rspec:
+    name: rspec (spec/)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify gpg is available
+        shell: bash
+        run: gpg --version
+
+      - name: Install gems (pinned in Gemfile.lock for Ruby 2.6 compatibility)
+        shell: bash
+        run: /usr/bin/bundle install --path vendor/bundle
+
+      - name: rspec
+        shell: bash
+        run: /usr/bin/bundle exec rspec
+
+      - name: Upload coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage/.resultset.json
+          fail_ci_if_error: false

@@ -1,0 +1,39 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# file location: bin/git-gpg-encrypt-restore
+#
+# Clones <remote-url>, decrypts the latest backup, and checks it out into
+# <target-dir> (created if missing). This is the disaster-recovery / fresh-
+# machine bootstrap path -- day-to-day push/pull against an existing repo
+# should use a real git remote instead (see README.md), not this command.
+#
+# Usage: git gpg-encrypt-restore <remote-url> <target-dir> [--dry-run]
+
+require_relative '../lib/git_remote_gpg_encrypt'
+
+def usage
+  puts 'Usage: git gpg-encrypt-restore <remote-url> <target-dir> [--dry-run]'
+  puts ''
+  puts 'Clones <remote-url>, decrypts the latest backup, and checks it out into'
+  puts '<target-dir> (created if missing, safe to use on an existing non-empty'
+  puts 'directory too).'
+  puts ''
+  puts '  eg: git gpg-encrypt-restore https://github.com/USER/REPO.git ~/restored'
+end
+
+if ARGV.include?('-h') || ARGV.include?('--help')
+  usage
+  exit 0
+end
+
+dry_run = !ARGV.delete('--dry-run').nil?
+
+if ARGV.size != 2
+  usage
+  exit 1
+end
+
+remote_url, target_dir = ARGV
+success = GitRemoteGpgEncrypt::Backup.clone_and_decrypt(remote_url: remote_url, target_dir: target_dir, dry_run: dry_run)
+exit(success ? 0 : 1)
