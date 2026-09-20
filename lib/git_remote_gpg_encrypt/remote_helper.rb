@@ -107,6 +107,7 @@ module GitRemoteGpgEncrypt
     # else here would indicate a protocol mismatch.
     #
     # @param line [String] the full 'option <name> <value>' line from git
+    # @return [void]
     def _reply_option(line)
       name, value = line.sub(/\Aoption /, '').split(' ', 2)
       case name
@@ -141,6 +142,7 @@ module GitRemoteGpgEncrypt
     #
     # @param git_dir [Pathname, String] the '.git' directory to import into
     # @param remote_url [String]
+    # @return [void]
     def _reply_list(git_dir:, remote_url:)
       refs = _with_stdout_redirected do
         Backup.fetch_and_list_bundle_refs(git_dir: git_dir, remote_url: remote_url, quiet: _quiet?)
@@ -152,6 +154,8 @@ module GitRemoteGpgEncrypt
     # Objects are already imported into GIT_DIR by the preceding 'list' call
     # (see the 'fetch' capability semantics above) -- just consume the batch
     # of 'fetch <sha1> <name>' lines and acknowledge with a blank line.
+    #
+    # @return [void]
     def _consume_fetch_batch
       loop do
         line = $stdin.gets
@@ -168,6 +172,7 @@ module GitRemoteGpgEncrypt
     # @param first_line [String] the first 'push <src>:<dst>' line, already read
     # @param git_dir [Pathname, String] the '.git' directory to bundle from
     # @param remote_url [String]
+    # @return [void]
     def _reply_push(first_line, git_dir:, remote_url:)
       refspecs = [first_line]
       loop do

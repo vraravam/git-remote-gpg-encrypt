@@ -8,6 +8,8 @@ end
 
 require_relative '../lib/git_remote_gpg_encrypt'
 
+require 'tempfile'
+
 # Shared helper for specs that exercise ENV-dependent code (PassphraseStore,
 # Config).
 module EnvHelpers
@@ -28,8 +30,47 @@ module EnvHelpers
   end
 end
 
+# Shared helpers for specs that exercise real stdin/stdout plumbing
+# (RemoteHelper), where RSpec's own 'output(...).to_stdout' matcher can't be
+# used -- it merely reassigns the $stdout Ruby object, but RemoteHelper's
+# _with_stdout_redirected uses a real IO#reopen (fd-level dup2), which needs
+# an actual file underneath to redirect to/from.
+module IOHelpers
+  # Temporarily replaces $stdin with input for the duration of the block.
+  #
+  # @param input [IO] replacement for $stdin
+  # @return [Object] the block's return value
+  def with_stdin(input)
+    previous = $stdin
+    $stdin = input
+    yield
+  ensure
+    $stdin = previous
+  end
+
+  # Redirects the real stdout file descriptor to a temp file for the
+  # duration of the block, then returns everything written to it. Mirrors
+  # the exact dup/reopen technique RemoteHelper._with_stdout_redirected
+  # itself uses, so it stays correct even across that real fd-level redirect.
+  #
+  # @return [String] everything written to stdout during the block
+  def capture_stdout
+    original_stdout_fd = $stdout.dup
+    Tempfile.create('capture-stdout-spec') do |tmp|
+      $stdout.reopen(tmp.path, 'w')
+      yield
+      $stdout.flush
+      $stdout.reopen(original_stdout_fd)
+      original_stdout_fd.close
+      tmp.rewind
+      return tmp.read
+    end
+  end
+end
+
 RSpec.configure do |config|
   config.include EnvHelpers
+  config.include IOHelpers
 
   config.expect_with :rspec do |expectations|
     expectations.include_chain_clauses_in_custom_matcher_descriptions = true

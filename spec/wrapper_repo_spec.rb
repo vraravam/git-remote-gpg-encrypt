@@ -74,6 +74,28 @@ RSpec.describe GitRemoteGpgEncrypt::WrapperRepo do
       missing_remote = tmp.join('does-not-exist.git').to_s
       expect(described_class.ensure!(missing_remote)).to be_nil
     end
+
+    it "renames the local branch when the remote's default branch is renamed after the initial clone" do
+      git = described_class.ensure!(bare_remote.to_s)
+      File.write(git.dir.join('blob.txt'), 'content')
+      git.add_all
+      git.commit('initial')
+      system('git', '-C', git.dir.to_s, 'push', '--quiet', 'origin', 'main')
+
+      # Simulate the remote's default branch being renamed via the host's web UI.
+      system('git', '-C', bare_remote.to_s, 'branch', '-m', 'main', 'trunk')
+      system('git', '-C', bare_remote.to_s, 'symbolic-ref', 'HEAD', 'refs/heads/trunk')
+
+      # The first call's 'origin/HEAD' repair can't succeed yet (there is no
+      # local 'refs/remotes/origin/trunk' ref until something actually
+      # fetches from the renamed remote) -- but its subsequent (also failing)
+      # 'git pull' still performs the underlying fetch as a side effect,
+      # which is exactly what makes the second call's repair succeed.
+      described_class.ensure!(bare_remote.to_s, pull_latest: true)
+      described_class.ensure!(bare_remote.to_s, pull_latest: true)
+
+      expect(git.current_branch).to eq('trunk')
+    end
   end
 
   describe '.commit_and_push' do
@@ -95,6 +117,15 @@ RSpec.describe GitRemoteGpgEncrypt::WrapperRepo do
       described_class.commit_and_push(git)
 
       expect(described_class.commit_and_push(git)).to be true
+    end
+
+    it 'warns and returns false when the commit itself fails' do
+      git = described_class.ensure!(bare_remote.to_s)
+      File.write(git.dir.join('blob.txt'), 'content')
+      allow(git).to receive(:commit).and_return(false)
+
+      expect { expect(described_class.commit_and_push(git)).to be false }
+        .to output(/Failed to commit encrypted blob/).to_stderr
     end
   end
 end

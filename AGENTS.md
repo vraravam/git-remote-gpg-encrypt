@@ -31,4 +31,5 @@ bundle exec rubocop      # lint must pass
 ```
 
 See `.ai/instructions.md` and `.ai/domains/edit-checklist.md` for the complete
-post-edit workflow.
+post-edit workflow, and `.ai/domains/changelog-maintenance.md` -- every commit needs a
+matching `CHANGELOG.md` section.

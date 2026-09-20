@@ -12,6 +12,7 @@ Domain-specific rules are in [`domains/`](./domains/).
 | Character encoding | [`domains/character-encoding.md`](./domains/character-encoding.md) | ASCII-only requirement |
 | Whitespace rules | [`domains/whitespace-rules.md`](./domains/whitespace-rules.md) | Post-edit whitespace checks |
 | Edit checklist | [`domains/edit-checklist.md`](./domains/edit-checklist.md) | Full post-edit workflow |
+| Changelog maintenance | [`domains/changelog-maintenance.md`](./domains/changelog-maintenance.md) | `CHANGELOG.md` entry rules and release tagging |
 
 **DO NOT duplicate content from these files elsewhere -- they are the authoritative
 source.**

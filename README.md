@@ -246,6 +246,12 @@ bundle exec rubocop    # lint
 See [`.ai/instructions.md`](.ai/instructions.md) for the full coding conventions used
 throughout this repository.
 
+## Changelog
+
+See [`CHANGELOG.md`](CHANGELOG.md) for what changed between versions, and this repo's
+[Releases](https://github.com/vraravam/git-remote-gpg-encrypt/releases) page for the
+same content per tagged version.
+
 ## License
 
 [MIT](LICENSE)

@@ -1,8 +1,65 @@
 # Changelog
 
-## 0.1.0
+---
 
-### Initial extraction as a standalone tool
+### 0.1.1
+
+#### Complete RSpec line coverage to 100%
+
+- Added `spec/core_spec.rb`, `spec/config_spec.rb`, `spec/passphrase_store_spec.rb`, and
+  `spec/remote_helper_spec.rb` -- previously-untested modules (`Core`, `Config`,
+  `PassphraseStore`, `RemoteHelper`) now have full unit coverage, including
+  `RemoteHelper`'s protocol dispatch, `_with_stdout_redirected`'s real fd-level
+  redirect, and `PassphraseStore`'s macOS Keychain / non-interactive failure paths.
+- `spec/backup_spec.rb`, `spec/wrapper_repo_spec.rb`, `spec/shell_git_spec.rb` -- added
+  targeted specs for previously-uncovered failure branches (`git bundle create`/decrypt/
+  chunk/list-heads/unbundle failures in `Backup`, `WrapperRepo.commit_and_push`'s commit
+  failure, `WrapperRepo`'s remote-default-branch-rename self-heal, and
+  `ShellGit#rename_branch`/`#set_upstream`).
+- `spec/spec_helper.rb` -- added an `IOHelpers` module (`with_stdin`, `capture_stdout`)
+  for specs that exercise real stdin/stdout plumbing, since RSpec's own
+  `output(...).to_stdout` matcher can't observe `RemoteHelper`'s real fd-level
+  `IO#reopen` redirect.
+- Line coverage raised from 74% to 100% (428/428 lines); test count from 31 to 96
+  examples.
+
+#### Fix missing YARD @return tags in RemoteHelper
+
+- `lib/git_remote_gpg_encrypt/remote_helper.rb` -- `_reply_option`, `_reply_list`,
+  `_consume_fetch_batch`, and `_reply_push` now document `@return [void]`, matching the
+  convention already established by `_reply_capabilities` for the same
+  "protocol-reply, no return value" method shape.
+
+#### Add Dependabot and a scheduled system-Ruby-version-drift check
+
+- `.github/dependabot.yml` -- weekly `bundler` ecosystem updates for this repo's
+  dev-tooling gems (`rspec`, `simplecov`, `rubocop`, `rubocop-ast`, `bundler-audit`).
+- `.github/workflows/dependabot-audit.yml` -- runs `bundler-audit` against Dependabot's
+  own PRs and requests a Copilot code review, guided by the new
+  `.github/instructions/dependabot-security-review.instructions.md` checklist.
+- `.github/workflows/system-ruby-version-check.yml` and
+  `.github/scripts/check-system-ruby-version.sh` -- weekly scheduled check (plus
+  `workflow_dispatch`) that compares the macOS runner's system Ruby against the
+  `Gemfile`'s `ruby '2.6.10'` pin and files a tracking issue on drift; a bash port of
+  the equivalent dotfiles script (this repo has no zsh).
+
+#### Establish CHANGELOG.md maintenance conventions
+
+- `.ai/domains/changelog-maintenance.md` -- new domain file (adapted from the dotfiles
+  repository's changelog generation rules): mandatory one-entry-per-commit rule, entry
+  structure/grouping conventions, amend/squash rewrite rules, and a GitHub Release
+  mirroring step for this repo's Homebrew-tap distribution model. Registered in
+  `.ai/instructions.md`'s domain table and `AGENTS.md`.
+- `CHANGELOG.md` -- reformatted the existing `0.1.0` entry to the newly-established
+  `### X.Y.Z` / `#### theme` / `---`-separator structure.
+- `README.md` -- added a `## Changelog` section linking to `CHANGELOG.md` and this
+  repo's GitHub Releases page.
+
+---
+
+### 0.1.0
+
+#### Initial extraction as a standalone tool
 
 Extracted from a personal dotfiles repository's `EncryptedBackup`
 module/`git-remote-encrypted-backup` helper into a standalone, general-purpose tool,
@@ -36,7 +93,7 @@ fully decoupled from any dotfiles-specific infrastructure.
     (defaults to GnuPG's own maximum) on top of the original's `--batch
     --passphrase-fd 0` mechanism.
 
-### CI reliability and legacy-chunk cleanup fixes
+#### CI reliability and legacy-chunk cleanup fixes
 
 Fixes discovered while migrating a real dotfiles installation from the original
 embedded `EncryptedBackup` module over to this standalone tool, and while
@@ -68,3 +125,5 @@ diagnosing an intermittent CI failure.
   times with a short delay, which only smooths over this one class of transient
   infrastructure hiccup -- a genuine wrong-passphrase or corrupted-input failure
   still fails identically on every attempt.
+
+---

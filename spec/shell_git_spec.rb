@@ -69,5 +69,25 @@ RSpec.describe GitRemoteGpgEncrypt::ShellGit do
       expect(git.remote_url).to eq('/tmp/does-not-need-to-exist.git')
       expect(git.remote_url('missing')).to be_nil
     end
+
+    it 'renames a branch and configures its upstream tracking branch' do
+      Dir.mktmpdir('shell-git-remote-') do |remote_dir|
+        system('git', 'init', '--quiet', '--bare', '--initial-branch=main', remote_dir)
+        system('git', '-C', tmp.to_s, 'remote', 'add', 'origin', remote_dir)
+
+        File.write(tmp.join('file.txt'), 'content')
+        git.add_all
+        git.commit('initial')
+        git.push('main')
+        # 'push' alone does not guarantee a local remote-tracking ref exists --
+        # fetch explicitly so 'origin/main' is there for set_upstream below.
+        system('git', '-C', tmp.to_s, 'fetch', '--quiet', 'origin')
+
+        expect(git.rename_branch('main', 'trunk')).to be true
+        expect(git.current_branch).to eq('trunk')
+
+        expect(git.set_upstream('trunk', 'origin/main')).to be true
+      end
+    end
   end
 end
