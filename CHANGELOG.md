@@ -2,6 +2,22 @@
 
 ---
 
+### 0.1.2
+
+#### Split opencode's AI instructions into on-demand skills and a trimmed always-on core
+
+- `.opencode/opencode.json` -- added (didn't exist before): the same git-state-modifying `permission.bash` deny-list as the dotfiles repo (`git commit`, `git push`, `git rebase`, etc.), and an `instructions` array limited to `.ai/instructions.md` plus the four cross-cutting domains (`whitespace-rules.md`, `edit-checklist.md`, `character-encoding.md`, `comment-philosophy.md`).
+- `.opencode/skills/gpg-encrypt-ruby-scripting/SKILL.md`, `.opencode/skills/gpg-encrypt-changelog-maintenance/SKILL.md` -- added, each a symlink into `.ai/domains/ruby-scripting.md` and `.ai/domains/changelog-maintenance.md` respectively (not a copy), now loaded on-demand by opencode instead of never being loaded automatically at all (no `opencode.json` existed here before).
+- `.ai/domains/ruby-scripting.md`, `.ai/domains/changelog-maintenance.md` -- added the `name`/`description` frontmatter keys backing the two skills above, alongside the existing `applyTo` key still used by Copilot/Cursor/Windsurf.
+- `AGENTS.md` -- added an "OpenCode-Specific Notes" section documenting the always-on/on-demand split and the enforced git-state permission deny-list.
+
+#### Adopting these changes
+
+- Restart opencode (or any running session) to pick up the new `.opencode/opencode.json`, skills, and `AGENTS.md` notes.
+- No functional code changed -- this is AI-assistant tooling configuration only.
+
+---
+
 ### 0.1.1
 
 #### Complete RSpec line coverage to 100%

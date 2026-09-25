@@ -1,5 +1,7 @@
 ---
 applyTo: "**/*.rb"
+name: gpg-encrypt-ruby-scripting
+description: Use when creating or editing any Ruby file in this repo -- lib/git_remote_gpg_encrypt.rb, lib/git_remote_gpg_encrypt/*.rb (core, config, passphrase_store, encryptor, chunker, shell_git, wrapper_repo, backup, remote_helper), the bin/* executables, or spec/*.rb. Covers Ruby 2.6 compatibility, this repo's dependency-free Core/Config/ShellGit conventions (no Logging/EnvVars/GitProcessor/CliParser), the module + thin bin/ wrapper pattern, mutating-method ban, and named-parameter conventions.
 ---
 
 # Ruby Script Instructions

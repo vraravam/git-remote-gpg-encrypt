@@ -1,0 +1,49 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "bash": {
+      "git add *": "deny",
+      "git add*": "deny",
+      "git branch -d*": "deny",
+      "git branch -D*": "deny",
+      "git checkout *": "deny",
+      "git checkout*": "deny",
+      "git cherry-pick *": "deny",
+      "git cherry-pick*": "deny",
+      "git clean *": "deny",
+      "git clean*": "deny",
+      "git commit *": "deny",
+      "git commit*": "deny",
+      "git merge *": "deny",
+      "git merge*": "deny",
+      "git mv *": "deny",
+      "git mv*": "deny",
+      "git push *": "deny",
+      "git push*": "deny",
+      "git rebase *": "deny",
+      "git rebase*": "deny",
+      "git reset *": "deny",
+      "git reset*": "deny",
+      "git restore *": "deny",
+      "git restore*": "deny",
+      "git revert *": "deny",
+      "git revert*": "deny",
+      "git rm *": "deny",
+      "git rm*": "deny",
+      "git stash *": "deny",
+      "git stash*": "deny",
+      "git switch *": "deny",
+      "git switch*": "deny",
+      "git tag *": "deny",
+      "git tag*": "deny",
+      "*": "allow"
+    }
+  },
+  "instructions": [
+    ".ai/instructions.md",
+    ".ai/domains/whitespace-rules.md",
+    ".ai/domains/edit-checklist.md",
+    ".ai/domains/character-encoding.md",
+    ".ai/domains/comment-philosophy.md"
+  ]
+}

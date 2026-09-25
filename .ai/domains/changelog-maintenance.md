@@ -1,5 +1,7 @@
 ---
 applyTo: "CHANGELOG.md"
+name: gpg-encrypt-changelog-maintenance
+description: Use before committing any change to this repo, or when adding/structuring/rewriting a CHANGELOG.md entry. Covers the mandatory one-entry-per-commit rule, entry structure and grouping conventions, amend/squash rewrite rules, adopter-facing triggers (bin/* usage changes, env var changes, Homebrew tap bump), and the GitHub Release mirroring step this repo's personal-tap distribution model needs.
 ---
 
 # Changelog Maintenance
