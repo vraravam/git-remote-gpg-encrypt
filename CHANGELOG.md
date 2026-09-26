@@ -2,6 +2,21 @@
 
 ---
 
+### 0.2.0
+
+#### Add a Nix flake as an additional installation channel
+
+- `flake.nix` -- added: packages `bin/` + `lib/` as an installable Nix flake (`packages.<system>.default`, `apps.<system>.default`), alongside the existing Homebrew tap and curl/manual install methods. Restricts `src` to `bin/`+`lib/` via `lib.fileset` so unrelated file changes (docs, specs) don't invalidate the build; wraps all four `bin/` executables with `git` and `gnupg` on `PATH` via `makeWrapper`, mirroring the Homebrew formula's `depends_on`. Intentionally does not patch the `#!/usr/bin/env ruby` shebangs -- targets whatever system Ruby is first on `PATH` at runtime, consistent with this repo's `Gemfile`/`.mise.toml` pinning to system Ruby.
+- `README.md` -- added a "Nix flake" subsection under Installation documenting `nix profile install`/`nix run`, and how to reference this repo's `packages.${system}.default` output as an input from another flake (e.g. a home-manager/nix-darwin config).
+- `.gitignore` -- ignore `/result` and `/result-*` (Nix build-output symlinks).
+
+#### Adopting these changes
+
+- No action needed for existing Homebrew/curl/manual installs -- this is purely an additional installation channel.
+- Nix users can install via `nix profile install github:vraravam/git-remote-gpg-encrypt`, run it directly via `nix run`, or depend on it as a flake input.
+
+---
+
 ### 0.1.2
 
 #### Split opencode's AI instructions into on-demand skills and a trimmed always-on core

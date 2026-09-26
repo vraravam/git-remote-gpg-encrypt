@@ -380,3 +380,7 @@ $RECYCLE.BIN/
 # Eclipse/Python templates) that would otherwise silently exclude them here.
 !/bin/
 !/lib/
+
+# Nix build output symlinks (created by 'nix build'/'nix run' against flake.nix).
+/result
+/result-*

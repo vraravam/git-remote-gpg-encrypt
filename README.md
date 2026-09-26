@@ -85,6 +85,18 @@ Installs `git`, `gnupg`, and this tool's four `bin/` executables, all wired up o
 `PATH`. See the [tap repo](https://github.com/vraravam/homebrew-tap)
 for the formula itself.
 
+### Nix flake
+
+```sh
+nix profile install github:vraravam/git-remote-gpg-encrypt
+```
+
+Or run it directly without installing: `nix run github:vraravam/git-remote-gpg-encrypt`.
+Wraps the four `bin/` executables with `git` and `gnupg` on `PATH` -- see
+[`flake.nix`](flake.nix) for the package definition, and reference
+`inputs.git-remote-gpg-encrypt.packages.${system}.default` from another flake
+(e.g. a home-manager/nix-darwin config) to depend on it directly.
+
 ### curl (any macOS or Linux machine with `git`, `gpg`, and `ruby` >= 2.6)
 
 ```sh
