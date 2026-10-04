@@ -50,7 +50,7 @@ None of the ones I found satisfy all of the following at once:
 |---|---|---|---|---|
 | [git-crypt](https://github.com/AGWA/git-crypt) | No (per-file filter) | No (GPG keys or an exported key file) | Yes | Its own README says: *"For encrypting an entire repository, consider... git-remote-gcrypt instead"* |
 | [transcrypt](https://github.com/elasticdog/transcrypt) | No (per-file filter) | Yes | Yes | Its own README says: *"There are much better options if your goal is to encrypt the entire repository"* |
-| [git-remote-gcrypt](https://github.com/spwhitton/git-remote-gcrypt) | Yes | **No** -- encrypts to your own GPG keypair by default | Yes | The keypair itself becomes something you must separately back up |
+| [git-remote-gcrypt](https://github.com/spwhitton/git-remote-gcrypt) | Yes | **No** -- encrypts to your own GPG keypair by default | Only with gpg-agent set up | The keypair itself becomes something you must separately back up; see [How this differs from git-remote-gcrypt](#how-this-differs-from-git-remote-gcrypt) |
 | [git-remote-sealed](https://github.com/hibariya/git-remote-sealed) | Yes | **No** -- `age` identity file per device, enroll/revoke model | Yes | Closest architectural match; well-engineered (Quint-modeled protocol), but still keyfile-based |
 | **git-remote-gpg-encrypt** (this tool) | **Yes** | **Yes** | **Yes** | `gpg --symmetric` + `git bundle`, chunked for hosting-limit compatibility |
 
@@ -71,6 +71,76 @@ kind of scripted use, which is why it's the mechanism this tool relies on.
 See [`docs/DESIGN.md`](docs/DESIGN.md) for the full write-up, including why chunking is
 necessary at all (GitHub's 100MB hard limit and 50MB warning threshold) and the
 `git bundle` + wrapper-repo mechanics.
+
+## How this differs from git-remote-gcrypt
+
+[`git-remote-gcrypt`](https://github.com/spwhitton/git-remote-gcrypt) is the closest
+established tool and the one most often recommended for this problem (for example, in
+[this Super User thread](https://superuser.com/questions/1162907/setting-up-an-encrypted-git-repository)).
+Both are git remote helpers that make a plain `git push`/`git pull` against an encrypted
+remote work. They make opposite trade-offs: gcrypt is a general-purpose, multi-user,
+public-key design; this tool is a single-owner, passphrase-only design.
+
+| Aspect | git-remote-gcrypt | git-remote-gpg-encrypt |
+|---|---|---|
+| Who can decrypt | The configured GPG `participants` (or your default key if unset). Supports multiple collaborators. | Whoever holds the one shared passphrase. Single owner by design. |
+| Secret you must back up | A GPG private key (plus its own passphrase) | One passphrase, which fits in a password manager |
+| Repository format | Custom: each packfile is encrypted with its own random symmetric key, and an encrypted + signed manifest lists the refs and keys | One opaque `git bundle` of all refs, `gpg --symmetric`-encrypted. No custom format. |
+| Authenticity | Manifest is signed, and a Remote ID warns if the remote was recreated | None. Anyone with the passphrase and push access can write a backup; there is no signer identity. |
+| Host file-size limits | No chunking documented; each packfile is stored as one file | Blob is split into chunks (default 45MB) to stay under GitHub's 50MB warning and 100MB hard limit |
+| Wrapper/backend history | Git backend commits are parentless with a fixed date and message, so history never grows | Each push adds a commit holding a full replacement blob, so wrapper-repo history grows without bound until you squash it |
+| Incrementality | `rsync://` and local backends are incremental. The git-URL backend re-uploads the full history on every push, and may repack unexpectedly. | Always whole-history: every push re-bundles, re-encrypts, and re-uploads everything |
+| Passphrase prompts | Defaults to `gpg -R` (hidden key IDs), so decryption tries each secret key in turn and can prompt repeatedly; often needs `GPG_TTY` or `gcrypt.gpg-args --use-agent` | Reads the passphrase from the macOS Keychain or `GIT_GPG_ENCRYPT_PASSPHRASE`; never prompts during push/pull/fetch |
+| Per-remote crypto config | `gcrypt-participants`, `gcrypt-signingkey`, etc. in each repo's git config | None. Nothing is stored in the repo's own config; the only inputs are the URL and the passphrase source. |
+| Restoring into a non-empty directory | Standard `git clone`, which refuses a non-empty target | `git gpg-encrypt-restore` checks out into an existing, non-empty directory (e.g. restoring straight into `$HOME`) |
+| Pre-destructive-operation check | `git-remote-gcrypt --check <url>` | `git gpg-encrypt-verify <url>` (decrypts and runs `git bundle verify`) |
+| Implementation | POSIX shell, GPL | Ruby >= 2.6, MIT |
+
+### When to prefer gcrypt
+
+- You need more than one person (or more than one key) to read and write the same
+  encrypted remote.
+- You want authenticated writes (signed manifest) and per-key revocation of future
+  pushes by editing the participant list.
+- You can use an `rsync://` or local backend, where pushes are incremental.
+- You want the wrapper/backend repo's history to stay at a single commit with no
+  maintenance.
+
+### When to prefer this tool
+
+- You are the only user, and want one secret that lives in a password manager rather than
+  a keypair that also needs backing up.
+- You need to bootstrap a brand-new machine from nothing. A GPG private key often lives
+  in the very repository you are trying to restore (e.g. `~/.gnupg` inside a backed-up
+  `$HOME`), which is a circular dependency; a passphrase isn't.
+- Pushes and pulls must be completely non-interactive (cron, bootstrap scripts).
+- The backup lives on an ordinary git host with a per-file size limit, so chunking
+  matters.
+
+### Trade-offs you accept by choosing this tool
+
+- **Wrapper-repo history growth.** Unlike gcrypt's git backend, nothing squashes the
+  wrapper repo for you. Each push adds a commit containing a whole new encrypted blob, so
+  the hosted repo grows with every push. Periodically squash its history (running
+  `git gpg-encrypt-verify` first, see [Security Model](#security-model)).
+- **No authenticity.** `gpg --symmetric` provides confidentiality and an integrity check
+  (MDC), but no signature identifying who wrote a backup.
+- **Weaker key derivation.** GnuPG's iterated and salted S2K (string-to-key) is not
+  memory-hard, so the passphrase must be long and random. `GIT_GPG_ENCRYPT_S2K_COUNT`
+  defaults to gpg's maximum to compensate as far as gpg allows.
+- **No revocation.** One shared passphrase for everyone and everything; rotating it does
+  not protect backups already pushed under the old one.
+- **The passphrase is still a secret to back up.** This tool relocates the "how do I
+  recover this" problem to a much smaller secret, it does not remove it. If you lose the
+  passphrase, the backup is unrecoverable.
+
+### What the two tools share
+
+- Both hide file names, tree structure, commit messages, and ref names from the host, but
+  not the wrapper repo's existence or rough size.
+- Both replace the whole remote on every push, so neither gets server-side
+  non-fast-forward protection; fetch or pull before pushing.
+- Both need the target repository to already exist on the host.
 
 ## Installation
 
@@ -241,6 +311,12 @@ GIT_PROTOCOL_FROM_USER=1 git push backup main
 - **No key rotation**: like `git-crypt`/`transcrypt`, if you need to change the
   passphrase, old history remains decryptable with the old one until you rewrite the
   wrapper repo's history entirely (`git gpg-encrypt-verify` first!).
+- **Wrapper-repo history grows with every push**: each push commits a full replacement
+  blob, and nothing prunes old ones (see
+  [How this differs from git-remote-gcrypt](#how-this-differs-from-git-remote-gcrypt)).
+  Old commits stay decryptable with whatever passphrase was active when they were pushed,
+  so squash the wrapper repo's history (after `git gpg-encrypt-verify`) both to reclaim
+  space and after rotating the passphrase.
 - **Every push replaces the whole backup** (no incremental/delta backup) -- there's no
   server-side "reject non-fast-forward" check the way a real git server enforces for
   plaintext pushes. Fetch/pull before pushing, as always.

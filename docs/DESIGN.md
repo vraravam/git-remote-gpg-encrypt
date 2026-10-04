@@ -23,6 +23,10 @@ passphrase-based tool found (`git-crypt`, `transcrypt`) only encrypts individual
 contents via a git clean/smudge filter -- their own authors recommend against using them
 for whole-repository encryption, and neither hides file names or tree structure.
 
+For a side-by-side comparison with `git-remote-gcrypt` specifically -- the closest
+established tool -- including where gcrypt is the better choice, see
+[`README.md`'s "How this differs from git-remote-gcrypt"](../README.md#how-this-differs-from-git-remote-gcrypt).
+
 ## Why `age` was rejected as the crypto backend
 
 `age -p` (passphrase mode) is cryptographically well-designed -- scrypt KDF (memory-hard,
@@ -85,6 +89,14 @@ deliberately decouples "the live, plaintext, local repository" from "the encrypt
 backup" -- the backup is a wholesale content replacement on every push (bundle -> encrypt
 -> chunk -> commit -> push), which would make no sense as commits directly inside the
 repository being backed up.
+
+Each push commits the new blob as an ordinary child commit of the previous one, so the
+wrapper repo's history (and its hosted size) grows by roughly one full blob per push until
+it is squashed. This differs from `git-remote-gcrypt`'s git backend, which writes a
+parentless, fixed-date commit on every push and therefore never accumulates history.
+Keeping ordinary commits here is deliberate: it needs no force-push on the normal path and
+leaves the previous backup reachable until you choose to squash (run
+`git gpg-encrypt-verify` first), at the cost of that manual maintenance step.
 
 ## Remote naming is entirely outside this tool's purview
 

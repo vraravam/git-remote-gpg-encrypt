@@ -2,6 +2,21 @@
 
 ---
 
+### 0.2.1
+
+#### Document how this tool differs from git-remote-gcrypt
+
+- `README.md` -- added a "How this differs from git-remote-gcrypt" section covering: a side-by-side comparison table (public-key vs passphrase-only, repository format, authenticity, chunking, wrapper/backend history growth, incrementality, passphrase prompts, per-remote config, restore into a non-empty directory); "When to prefer gcrypt", "When to prefer this tool", "Trade-offs you accept by choosing this tool", and "What the two tools share" subsections. The existing research table's `git-remote-gcrypt` row now reads "Only with gpg-agent set up" under Non-interactive (was an unqualified "Yes") and links to the new section. The Security Model section gained a bullet documenting that wrapper-repo history grows with every push and must be squashed manually.
+- `docs/DESIGN.md` -- "Why not an existing tool?" now points to the README's new comparison section; "Why the wrapper repo is a separate, plain repo" now documents the history-growth behavior and why ordinary child commits are used (no force-push on the normal path, previous backup stays reachable until squashed), contrasting it with gcrypt's parentless fixed-date backend commits.
+- `lib/git_remote_gpg_encrypt/version.rb`, `flake.nix` -- version bumped to 0.2.1 (documentation-only release; no behavior change).
+
+#### Adopting these changes
+
+- No action needed -- documentation only, no code or `bin/` behavior changed.
+- Homebrew tap maintainers: bump `Formula/git-remote-gpg-encrypt.rb`'s `tag:`/`revision:` in `homebrew-tap` after tagging `v0.2.1`, as with any release.
+
+---
+
 ### 0.2.0
 
 #### Add a Nix flake as an additional installation channel
