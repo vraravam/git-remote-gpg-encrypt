@@ -41,7 +41,7 @@
             # Keep in sync with CHANGELOG.md's latest version and the homebrew-tap
             # Formula's 'tag:'/'revision:' -- this is the flake's equivalent of that
             # formula's pinned release, bumped the same way on every new release.
-            version = "0.2.1";
+            version = "0.2.2";
 
             # Only bin/ and lib/ are actual runtime artifacts -- restricting the
             # source this way means unrelated changes (a CHANGELOG entry, a spec

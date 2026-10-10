@@ -2,6 +2,22 @@
 
 ---
 
+### 0.2.2
+
+#### Port the system Ruby drift check from bash to Ruby
+
+- `.github/scripts/check-system-ruby-version.rb` -- added, replacing `check-system-ruby-version.sh`: same behavior (compare `/usr/bin/ruby`'s version to the `Gemfile` pin; open a deduplicated `ruby-version-drift` GitHub issue via `gh` on mismatch), now written in dependency-free Ruby as a `CheckSystemRubyVersion` module with a standalone entrypoint, consistent with the rest of the repo's Ruby-only tooling.
+- `.github/scripts/check-system-ruby-version.sh` -- removed.
+- `.github/workflows/system-ruby-version-check.yml` -- the run step now invokes `/usr/bin/ruby .github/scripts/check-system-ruby-version.rb`.
+- `lib/git_remote_gpg_encrypt/version.rb`, `flake.nix` -- version bumped to 0.2.2.
+
+#### Adopting these changes
+
+- No action needed -- CI-only change; no `lib/` or `bin/` behavior changed.
+- Homebrew tap maintainers: bump `Formula/git-remote-gpg-encrypt.rb`'s `tag:`/`revision:` in `homebrew-tap` after tagging `v0.2.2`, as with any release.
+
+---
+
 ### 0.2.1
 
 #### Document how this tool differs from git-remote-gcrypt
