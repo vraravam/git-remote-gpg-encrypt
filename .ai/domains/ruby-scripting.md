@@ -43,7 +43,7 @@ Apply these rules when writing or editing any Ruby file in this repository (`lib
 | Diagnostics | `warn` (stderr), never `puts` for errors | [Diagnostics](#diagnostics----no-logging-framework) |
 | Env-var config | `Config.foo` (`lib/git_remote_gpg_encrypt/config.rb`) | [Configuration](#configuration----the-config-module) |
 | Git operations | `ShellGit.new(dir)` | [ShellGit Usage](#shellgit-usage-patterns) |
-| Nil check | `Core.nil_or_empty?(value)` | [`nil_or_empty?` Helper](#nil_or_empty-helper) |
+| Nil check | `Core.nil_or_empty?(value)` | [`nil_or_empty?` Helper](#corenil_or_empty-helper) |
 | Mutating methods | Never use `strip!`/`gsub!`/etc | [Mutating Methods](#mutating-methods----avoid--variants) |
 | Memoization | `@_var ||= expensive_operation` | [Memoization](#memoization) |
 

@@ -1,5 +1,7 @@
 ---
 applyTo: "**/*.rb,**/*.sh"
+name: gpg-encrypt-comment-philosophy
+description: Use when writing, editing, or reviewing code comments in this repo (Ruby or shell) -- comments are timeless reference documentation that explain WHY and tradeoffs, never a changelog or commit message.
 ---
 
 # Comment Philosophy

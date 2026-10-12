@@ -3,16 +3,28 @@
 This is the main entry point for any AI coding assistant working on this repository.
 Domain-specific rules are in [`domains/`](./domains/).
 
+## Loading Strategy
+
+1. **Always loaded**: this file, [`whitespace-rules.md`](./domains/whitespace-rules.md) and
+   [`edit-checklist.md`](./domains/edit-checklist.md).
+2. **Load on demand**: the domain file(s) matching the task (table below).
+3. **Do not preload everything.** Reading every file wastes context and buries the rules
+   that matter.
+
+These files are plain markdown with YAML frontmatter (`applyTo`, `name`, `description`) and
+assume only generic capabilities (read, edit, search, run a shell command), so any assistant
+can use them.
+
 ## Instruction Files
 
-| Domain | File | Coverage |
-|--------|------|----------|
-| Ruby scripting | [`domains/ruby-scripting.md`](./domains/ruby-scripting.md) | All `.rb` files and `bin/*` executables |
-| Comment philosophy | [`domains/comment-philosophy.md`](./domains/comment-philosophy.md) | Comment style/rationale |
-| Character encoding | [`domains/character-encoding.md`](./domains/character-encoding.md) | ASCII-only requirement |
-| Whitespace rules | [`domains/whitespace-rules.md`](./domains/whitespace-rules.md) | Post-edit whitespace checks |
-| Edit checklist | [`domains/edit-checklist.md`](./domains/edit-checklist.md) | Full post-edit workflow |
-| Changelog maintenance | [`domains/changelog-maintenance.md`](./domains/changelog-maintenance.md) | `CHANGELOG.md` entry rules and release tagging |
+| Domain | File | Read when |
+|--------|------|-----------|
+| Ruby scripting | [`domains/ruby-scripting.md`](./domains/ruby-scripting.md) | Any `.rb` file and `bin/*` executables |
+| Comment philosophy | [`domains/comment-philosophy.md`](./domains/comment-philosophy.md) | Writing or changing comments |
+| Character encoding | [`domains/character-encoding.md`](./domains/character-encoding.md) | Anything that may contain non-ASCII characters |
+| Whitespace rules | [`domains/whitespace-rules.md`](./domains/whitespace-rules.md) | After every edit (always loaded) |
+| Edit checklist | [`domains/edit-checklist.md`](./domains/edit-checklist.md) | After every edit (always loaded) |
+| Changelog maintenance | [`domains/changelog-maintenance.md`](./domains/changelog-maintenance.md) | `CHANGELOG.md` entries, commits, release tagging |
 
 **DO NOT duplicate content from these files elsewhere -- they are the authoritative
 source.**
@@ -72,3 +84,32 @@ cryptography or git plumbing).
 
 Ask only if this repo's own files and `README.md` cannot answer the question. Do not ask
 about anything already covered in `.ai/domains/`.
+
+## Periodic Review -- Keep the Context Budget Healthy
+
+Instruction files only grow. Review the `.ai/` layout whenever a release is cut (or roughly
+quarterly), and whenever one rule addition pushes a file past a threshold below.
+
+**Measure** (bytes; about 4 bytes per token):
+
+```bash
+wc -c AGENTS.md .ai/instructions.md .ai/domains/whitespace-rules.md .ai/domains/edit-checklist.md;
+wc -c .ai/domains/*.md | sort -rn;
+```
+
+| Item | Target | Action when exceeded |
+|------|--------|----------------------|
+| Always-loaded total (`AGENTS.md`, `instructions.md`, `whitespace-rules.md`, `edit-checklist.md`) | 20 KB or less | Move situational rules into an on-demand domain file; link instead of restating |
+| Any single domain file | 30 KB or less | Split into a core file plus topic files; keep a "Topic Files" table in the core |
+| `AGENTS.md` | 6 KB or less | Keep only hard rules, the routing table and one-line pointers |
+
+**Checklist for each review:**
+
+1. Re-measure and compare against the thresholds.
+2. Look for rules duplicated across files; keep one canonical home and link to it.
+3. Promote rules every edit needs into an always-loaded file, and demote rarely-needed ones to an on-demand file.
+4. After any move, check that every markdown link resolves and every `§ Heading` reference names the file that holds that heading.
+5. Keep the routing table in `AGENTS.md`, the table above, and the `.opencode/skills/` symlinks (one per on-demand domain file; directory name equal to the frontmatter `name`) in sync with `domains/`.
+6. Confirm each domain file has `applyTo`, `name` and a "Use when..." `description`.
+7. Remove model- or harness-specific guidance.
+8. This repo's rules are an adapted subset of the dotfiles repository's. When that repo restructures or changes a rule that also applies here, check whether an adapted version belongs here too.

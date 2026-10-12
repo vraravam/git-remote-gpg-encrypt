@@ -1,5 +1,7 @@
 ---
 applyTo: "**/*.rb,**/*.sh,**/*.md"
+name: gpg-encrypt-character-encoding
+description: Use when writing Ruby, shell, or markdown in this repo that might contain non-ASCII characters -- em/en dashes, curly quotes and other typographic punctuation are forbidden; use ASCII dashes and quotes only.
 ---
 
 # Character Encoding and Punctuation

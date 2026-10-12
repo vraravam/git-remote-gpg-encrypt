@@ -2,7 +2,21 @@
 
 This repository uses a small instruction system in `.ai/`, adapted from the
 [dotfiles repository](https://github.com/vraravam/dotfiles)'s own conventions.
-**Load `.ai/instructions.md` first.**
+Load only what the task needs -- do not read every file under `.ai/`.
+
+## Loading Strategy
+
+- **Always read**: this file, [`.ai/instructions.md`](.ai/instructions.md),
+  [`.ai/domains/whitespace-rules.md`](.ai/domains/whitespace-rules.md) and
+  [`.ai/domains/edit-checklist.md`](.ai/domains/edit-checklist.md) before editing.
+- **Read on demand**:
+
+| If the task touches... | Read (under `.ai/domains/`) |
+|------------------------|-----------------------------|
+| Any Ruby file (`lib/`, `bin/`, `spec/`) | `ruby-scripting.md` |
+| Writing or changing comments | `comment-philosophy.md` |
+| Text that may contain non-ASCII characters | `character-encoding.md` |
+| A commit, release, or `CHANGELOG.md` | `changelog-maintenance.md` |
 
 ## Quick Facts
 
@@ -34,16 +48,20 @@ See `.ai/instructions.md` and `.ai/domains/edit-checklist.md` for the complete
 post-edit workflow, and `.ai/domains/changelog-maintenance.md` -- every commit needs a
 matching `CHANGELOG.md` section.
 
-## OpenCode-Specific Notes
+## Tool Entry Points
 
-`.opencode/opencode.json` force-loads only `.ai/instructions.md` plus the small,
-cross-cutting domains (`whitespace-rules.md`, `edit-checklist.md`,
-`character-encoding.md`, `comment-philosophy.md`) into every session. The two larger,
-situational domains (`ruby-scripting.md`, `changelog-maintenance.md`) are exposed as
-on-demand skills instead -- `.opencode/skills/gpg-encrypt-ruby-scripting/SKILL.md` and
-`.opencode/skills/gpg-encrypt-changelog-maintenance/SKILL.md`, each a **symlink** into
-the corresponding `.ai/domains/` file (not a copy), loaded only when opencode
-recognizes the current task matches. `opencode.json` also denies the same
-git-state-modifying commands (`git commit`, `git push`, `git rebase`, etc.) called out
-above under `permission.bash`, so the rule is enforced, not just documented.
+- **AGENTS.md-aware tools (OpenCode, Codex, Cursor, etc.)**: this file.
+- **Claude Code**: `CLAUDE.md` (imports this file) and `.claude/skills` (a symlink to
+  `.opencode/skills`).
+- **OpenCode**: `.opencode/opencode.json` force-loads only `.ai/instructions.md`,
+  `whitespace-rules.md` and `edit-checklist.md`. Every other domain file is an on-demand
+  skill under `.opencode/skills/gpg-encrypt-<domain>/SKILL.md`, each a **symlink** into the
+  matching `.ai/domains/` file (not a copy), so there is one physical file per domain.
+  `opencode.json` also denies the git-state-modifying commands called out above
+  (`git commit`, `git push`, `git rebase`, etc.) under `permission.bash`, so the rule is
+  enforced, not just documented.
 
+## Maintenance
+
+When adding or moving rules, or on the periodic cadence, follow
+`.ai/instructions.md` § Periodic Review.

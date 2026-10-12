@@ -2,6 +2,25 @@
 
 ---
 
+### 0.2.3
+
+#### Restructure the `.ai/` instructions for on-demand loading
+
+- `.ai/instructions.md` -- added a loading strategy (what is always loaded vs. read on demand), a "Read when" column in the domain table, a note that the files assume no particular model or harness, and a "Periodic Review" section (context-budget thresholds scaled to this repo, a measuring command, and a review checklist, including checking whether dotfiles restructurings should be mirrored here).
+- `AGENTS.md` -- added a loading strategy with a task-to-domain routing table; the OpenCode-only notes became a tool-entry-points section (AGENTS.md-aware tools, Claude Code, OpenCode) plus a pointer to the new Periodic Review.
+- `.ai/domains/comment-philosophy.md`, `.ai/domains/character-encoding.md` -- gained `name`/`description` frontmatter and are now loaded on demand instead of force-loaded every session (always-loaded context drops from about 18 KB to about 14 KB).
+- `.ai/domains/ruby-scripting.md` -- fixed a broken in-file link to the `Core.nil_or_empty?` section.
+- `.opencode/opencode.json` -- the force-loaded list is now `instructions.md`, `whitespace-rules.md` and `edit-checklist.md` only.
+- `.opencode/skills/`, `.claude/skills`, `CLAUDE.md` -- new `gpg-encrypt-comment-philosophy` and `gpg-encrypt-character-encoding` skills (symlinks into `.ai/domains/`); `.claude/skills` points at the same skills for Claude Code; `CLAUDE.md` imports `AGENTS.md`.
+- `lib/git_remote_gpg_encrypt/version.rb`, `flake.nix` -- version bumped to 0.2.3 (documentation/tooling-only release; no behavior change).
+
+#### Adopting these changes
+
+- No action needed -- instruction-file changes only; no `lib/` or `bin/` behavior changed.
+- Homebrew tap maintainers: bump `Formula/git-remote-gpg-encrypt.rb`'s `tag:`/`revision:` in `homebrew-tap` after tagging `v0.2.3`, as with any release.
+
+---
+
 ### 0.2.2
 
 #### Port the system Ruby drift check from bash to Ruby
