@@ -1,5 +1,7 @@
 ---
 applyTo: "**/*.rb,**/*.sh"
+name: gpg-encrypt-edit-checklist
+description: Use after creating or editing any Ruby file or install.sh in this repo to run syntax checks, rubocop lint/formatting, whitespace verification, and executable permission checks.
 ---
 
 # Edit Checklist
@@ -11,7 +13,7 @@ applyTo: "**/*.rb,**/*.sh"
 
 Apply this checklist after every edit to any file in this repository.
 
-## Quick Reference
+## Post-Edit Verification Matrix
 
 | Step | Ruby (`lib/`, `bin/`, `spec/`) | `install.sh` |
 |------|------|--------------|

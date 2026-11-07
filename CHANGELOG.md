@@ -2,6 +2,19 @@
 
 ---
 
+### 0.2.4
+
+#### Add AI docs layout spec and complete domain frontmatter
+
+- `.ai/domains/edit-checklist.md`, `.ai/domains/whitespace-rules.md` -- gained `name`/`description` frontmatter (the last two domains still missing it), so every domain file now satisfies the `applyTo`/`name`/`description` completeness rule enforced by the new spec; the checklist's "Quick Reference" heading was renamed to "Post-Edit Verification Matrix" to match the dotfiles upstream naming.
+- `spec/ai_docs_spec.rb` -- added, adapted from the dotfiles 4.0.28 layout spec: asserts complete frontmatter on every domain file, an on-demand skill symlink (`gpg-encrypt-<domain>`) for each non-always-loaded domain, and that every relative markdown link under `.ai/` resolves.
+- `lib/git_remote_gpg_encrypt/version.rb`, `flake.nix` -- version bumped to 0.2.4 (documentation/tooling-only release; no behavior change).
+
+#### Adopting these changes
+
+- No action needed -- instruction-file/spec changes only; no `lib/` or `bin/` behavior changed.
+
+---
 ### 0.2.3
 
 #### Restructure the `.ai/` instructions for on-demand loading

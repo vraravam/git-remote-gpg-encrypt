@@ -1,5 +1,7 @@
 ---
 applyTo: "**/*"
+name: gpg-encrypt-whitespace-rules
+description: Use when verifying or fixing whitespace in any edited file in this repo -- trailing newlines, trailing blank lines, trailing spaces. Applies to every non-markdown file.
 ---
 
 # Whitespace Rules
