@@ -149,7 +149,7 @@ module GitRemoteGpgEncrypt
           return false
         end
 
-        wrapper = WrapperRepo.ensure!(remote_url)
+        wrapper = WrapperRepo.ensure!(remote_url, pull_latest: true)
         return false unless wrapper
 
         wrapper_dir = WrapperRepo.dir_for(remote_url)
@@ -216,9 +216,22 @@ module GitRemoteGpgEncrypt
         end
 
         # Ruby 2.6 has no Enumerator#filter_map (added in 2.7) -- map then compact.
+        #
+        # Only advertise the backup's own local refs. A bundle created with
+        # '--all' also contains remote-tracking refs (refs/remotes/*) and,
+        # on the receiving git's side, those make the remote look like it
+        # has unrelated remote-tracking branches of its own ('refs/remotes/
+        # origin/...'), which confuses git's remote-HEAD / branch-tracking
+        # detection ("Cannot determine remote HEAD") and can surface as a
+        # failed push/fetch even though the underlying objects are fine.
+        # Local remote-tracking state is a property of this machine's clone,
+        # not something the encrypted backup should carry across machines --
+        # and never a ref the outer remote should learn about.
         return heads_out.each_line.map do |line|
           sha1, ref = line.strip.split(' ', 2)
-          [sha1, ref] unless Core.nil_or_empty?(sha1) || Core.nil_or_empty?(ref)
+          next if Core.nil_or_empty?(sha1) || Core.nil_or_empty?(ref)
+          next if ref == 'HEAD' ? false : ref.start_with?('refs/remotes/')
+          [sha1, ref]
         end.compact
       end
     end
@@ -251,6 +264,7 @@ module GitRemoteGpgEncrypt
         checked_out
       end
     end
+
     private_class_method :_checkout_bundle_into
   end
 end

@@ -3,6 +3,7 @@
 
 require 'digest'
 require 'fileutils'
+require 'open3'
 require 'pathname'
 
 module GitRemoteGpgEncrypt
@@ -53,10 +54,33 @@ module GitRemoteGpgEncrypt
           git.reset_hard
         end
         if pull_latest
-          _repair_remote_tracking(git)
-          git.pull
+          # Detect whether the remote still has any refs at all (wrapper
+          # repo was deleted/recreated empty, had its history rewritten, or is
+          # otherwise not reachable in its current stored form). Running the
+          # repair/pull machinery on an empty remote only prints
+          # 'Cannot determine remote HEAD' noise and would otherwise leave a
+          # stale local mirror in place -- which then makes a subsequent push
+          # silently skip (nothing staged, remote still empty).
+          refs_out, = Open3.capture3('git', '-C', dir.to_s, 'ls-remote', 'origin')
+          remote_has_refs = !refs_out.strip.empty?
+
+          pulled = false
+          if remote_has_refs
+            _repair_remote_tracking(git)
+            pulled = git.pull
+          end
+
+          unless pulled
+            # Remote history is gone or incompatible -- discard the stale
+            # mirror and reclone from the (possibly empty) remote below so a
+            # fresh backup can actually be committed and pushed.
+            FileUtils.rm_rf(dir)
+          else
+            return git
+          end
+        else
+          return git
         end
-        return git
       end
 
       FileUtils.mkdir_p(dir.dirname)
@@ -121,6 +145,7 @@ module GitRemoteGpgEncrypt
       git.rename_branch(local_branch, remote_branch)
       git.set_upstream(remote_branch, "origin/#{remote_branch}")
     end
+
     private_class_method :_repair_remote_tracking
   end
 end

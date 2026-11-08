@@ -2,6 +2,23 @@
 
 ---
 
+### 0.2.5
+
+#### Filter remote-tracking refs from the encrypted bundle's advertised refs
+
+- `lib/git_remote_gpg_encrypt/backup.rb` (`fetch_and_list_bundle_refs`) -- bundles built with `--all` also contain remote-tracking refs (`refs/remotes/*`); advertising them made the wrapper remote look like it owned `refs/remotes/origin/HEAD`, etc., which confused Git's remote-HEAD/branch-tracking detection and surfaced as `fatal: ... Cannot determine remote HEAD` during push/fetch. Those refs are now skipped, so only the backup's own refs (`HEAD`, `refs/heads/*`, `refs/tags/*`, …) are reported. Local remote-tracking state is a property of the individual clone, not something an encrypted backup should carry across machines.
+
+#### Recover from a deleted/recreated wrapper repo instead of silently skipping the push
+
+- `lib/git_remote_gpg_encrypt/wrapper_repo.rb` (`ensure!`) -- with `pull_latest: true`, now checks whether the remote still has any refs before running the repair/pull machinery; on an empty remote it no longer prints the misleading `Cannot determine remote HEAD`, and when the remote's history is gone or incompatible (e.g. the wrapper repo was deleted and recreated empty) it discards the stale local mirror and reclones from the (possibly empty) remote instead of keeping a stale one.
+- `lib/git_remote_gpg_encrypt/backup.rb` (`bundle_and_push`) -- calls `WrapperRepo.ensure!` with `pull_latest: true`, so a recreated remote is detected and re-created on an ordinary `git push` rather than being treated as "Everything up-to-date" with nothing pushed.
+
+#### Adopting these changes
+
+- No action needed for existing backups; recreated/rewritten wrapper repos are handled automatically on the next push.
+- Homebrew tap maintainers: bump `Formula/git-remote-gpg-encrypt.rb`'s `tag:`/`revision:` in `homebrew-tap` after tagging `v0.2.5`, as with any release.
+
+---
 ### 0.2.4
 
 #### Add AI docs layout spec and complete domain frontmatter
